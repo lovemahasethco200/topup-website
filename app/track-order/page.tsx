@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 type OrderType = {
@@ -20,7 +21,7 @@ type OrderType = {
   updatedAt?: string;
 };
 
-export default function TrackOrderPage() {
+function TrackOrderContent() {
   const searchParams = useSearchParams();
   const idFromUrl = searchParams.get("id") || "";
 
@@ -39,6 +40,7 @@ export default function TrackOrderPage() {
       setOrder(null);
 
       const query = new URLSearchParams();
+
       if (params.id) query.set("id", params.id);
       if (params.phone) query.set("phone", params.phone);
 
@@ -66,7 +68,9 @@ export default function TrackOrderPage() {
       return;
     }
 
-    fetchOrder({ id: idFromUrl });
+    setSearchId(idFromUrl);
+    void fetchOrder({ id: idFromUrl });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idFromUrl]);
 
@@ -130,7 +134,9 @@ export default function TrackOrderPage() {
       <div className="mx-auto max-w-6xl">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold md:text-4xl">Track Your Order</h1>
+          <h1 className="text-3xl font-bold md:text-4xl">
+            Track Your Order
+          </h1>
           <p className="mt-2 text-sm text-slate-400 md:text-base">
             Enter your Order ID or Phone Number to check your latest top-up
             order status.
@@ -198,7 +204,7 @@ export default function TrackOrderPage() {
         {order ? (
           <div className="mt-6 grid gap-6 lg:grid-cols-3">
             {/* Left details */}
-            <div className="lg:col-span-2 rounded-3xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl md:p-8">
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl lg:col-span-2 md:p-8">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-sm uppercase tracking-wide text-slate-400">
@@ -251,8 +257,7 @@ export default function TrackOrderPage() {
             <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl md:p-6">
               <h3 className="text-2xl font-bold">Order Status</h3>
               <p className="mt-2 text-sm text-slate-400">
-                Your order is being tracked live based on the latest admin
-                update.
+                Your order is being tracked based on the latest admin update.
               </p>
 
               <div className="mt-6 space-y-4">
@@ -264,21 +269,17 @@ export default function TrackOrderPage() {
 
                 <StatusStep
                   title="Payment Review"
-                  active={
-                    ["pending", "processing", "completed"].includes(
-                      (order.status || "").toLowerCase()
-                    )
-                  }
+                  active={["pending", "processing", "completed"].includes(
+                    (order.status || "").toLowerCase()
+                  )}
                   description="Payment and order details are being checked."
                 />
 
                 <StatusStep
                   title="Top-up Processing"
-                  active={
-                    ["processing", "completed"].includes(
-                      (order.status || "").toLowerCase()
-                    )
-                  }
+                  active={["processing", "completed"].includes(
+                    (order.status || "").toLowerCase()
+                  )}
                   description="Your game top-up is being processed by admin."
                 />
 
@@ -287,6 +288,13 @@ export default function TrackOrderPage() {
                   active={(order.status || "").toLowerCase() === "completed"}
                   description="Top-up delivered successfully."
                 />
+
+                {(order.status || "").toLowerCase() === "cancelled" ? (
+                  <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300">
+                    This order has been cancelled. Please contact support if
+                    you need assistance.
+                  </p>
+                ) : null}
               </div>
 
               <div className="mt-6 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4">
@@ -306,7 +314,13 @@ export default function TrackOrderPage() {
   );
 }
 
-function InfoCard({ label, value }: { label: string; value: string }) {
+function InfoCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
       <p className="text-sm text-slate-400">{label}</p>
@@ -353,15 +367,25 @@ function StatusStep({
         }`}
       />
       <div>
-        <h5
-          className={`font-semibold ${
-            active ? "text-white" : "text-slate-500"
-          }`}
-        >
+        <h5 className={`font-semibold ${active ? "text-white" : "text-slate-500"}`}>
           {title}
         </h5>
         <p className="mt-1 text-sm text-slate-400">{description}</p>
       </div>
     </div>
+  );
+}
+
+export default function TrackOrderPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-950 px-4 py-10 text-center text-white">
+          Loading order details...
+        </main>
+      }
+    >
+      <TrackOrderContent />
+    </Suspense>
   );
 }

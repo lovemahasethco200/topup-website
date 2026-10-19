@@ -4,8 +4,7 @@ import Footer from "@/components/Footer";
 export default function ContactPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <Navbar current="contact" />
-
+      <Navbar />
       <section className="mx-auto max-w-4xl px-6 py-14">
         <p className="text-sm uppercase tracking-[0.2em] text-cyan-400">
           Contact Us

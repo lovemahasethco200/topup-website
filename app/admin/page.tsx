@@ -68,9 +68,18 @@ const [gameDesc, setGameDesc] = useState("");
 const [gameImage, setGameImage] = useState("");
 const [editingGame, setEditingGame] = useState<string | null>(null);
 
+
+
   // packages
   const [packages, setPackages] = useState<PackageType[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(true);
+
+  // Add package form
+const [packageGameSlug, setPackageGameSlug] = useState("");
+const [packageName, setPackageName] = useState("");
+const [packagePrice, setPackagePrice] = useState("");
+const [packageBonus, setPackageBonus] = useState("");
+const [packageSaving, setPackageSaving] = useState(false);
 
   // UI messages
   const [topMessage, setTopMessage] = useState<{
@@ -255,6 +264,53 @@ const deleteGame = async (id: string) => {
       setPackagesLoading(false);
     }
   };
+
+   const savePackage = async () => {
+  if (!packageGameSlug || !packageName.trim() || !packagePrice.trim()) {
+    showTopMessage("error", "Game, package name and price are required");
+    return;
+  }
+
+  try {
+    setPackageSaving(true);
+
+    const res = await fetch("/api/admin/packages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        gameSlug: packageGameSlug,
+        name: packageName.trim(),
+        price: packagePrice.trim(),
+        bonus: packageBonus.trim(),
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to add package");
+    }
+
+    showTopMessage("success", "Package added successfully");
+    setPackageName("");
+    setPackagePrice("");
+    setPackageBonus("");
+
+    await fetchPackages();
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Failed to add package";
+    showTopMessage("error", message);
+  } finally {
+    setPackageSaving(false);
+  }
+};
+
+  
+  
 
   // ----------------------------------
   // EFFECTS
@@ -841,6 +897,53 @@ const deleteGame = async (id: string) => {
                 Current package list stored in database.
               </p>
             </div>
+            <div className="mb-8 rounded-3xl border border-slate-700 bg-slate-950/60 p-5">
+  <h3 className="mb-4 text-xl font-bold">Add New Package</h3>
+
+  <div className="grid gap-4 md:grid-cols-2">
+    <select
+      value={packageGameSlug}
+      onChange={(e) => setPackageGameSlug(e.target.value)}
+      className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white"
+    >
+      <option value="">Select Game</option>
+      {games.map((game) => (
+        <option key={game._id} value={game.slug}>
+          {game.name}
+        </option>
+      ))}
+    </select>
+
+    <input
+      value={packageName}
+      onChange={(e) => setPackageName(e.target.value)}
+      placeholder="Package Name (e.g. 60 UC)"
+      className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white"
+    />
+
+    <input
+      value={packagePrice}
+      onChange={(e) => setPackagePrice(e.target.value)}
+      placeholder="Price (e.g. 150)"
+      className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white"
+    />
+
+    <input
+      value={packageBonus}
+      onChange={(e) => setPackageBonus(e.target.value)}
+      placeholder="Bonus (optional)"
+      className="rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white"
+    />
+  </div>
+
+  <button
+    onClick={savePackage}
+    disabled={packageSaving}
+    className="mt-5 rounded-2xl bg-cyan-500 px-6 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-60"
+  >
+    {packageSaving ? "Saving..." : "Add Package"}
+  </button>
+</div>
 
             {packagesLoading ? (
               <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6 text-center text-slate-400">
