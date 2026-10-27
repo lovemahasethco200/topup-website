@@ -1,20 +1,40 @@
+
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { ADMIN_COOKIE_NAME, ADMIN_COOKIE_VALUE } from "@/lib/adminAuth";
+import {
+  ADMIN_COOKIE_NAME,
+  verifyAdminSession,
+} from "@/lib/adminAuth";
 
 export async function requireAdmin() {
-  const cookieStore = await cookies();
-  const adminCookie = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
 
-  if (!adminCookie || adminCookie !== ADMIN_COOKIE_VALUE) {
+    if (!verifyAdminSession(token)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized admin access",
+        },
+        {
+          status: 401,
+          headers: { "Cache-Control": "no-store" },
+        }
+      );
+    }
+
+    return null;
+  } catch {
     return NextResponse.json(
       {
         success: false,
-        message: "Unauthorized admin access",
+        message: "Admin session verification failed",
       },
-      { status: 401 }
+      {
+        status: 401,
+        headers: { "Cache-Control": "no-store" },
+      }
     );
   }
-
-  return null;
 }

@@ -7,6 +7,7 @@ const PackageSchema = new mongoose.Schema(
       required: true,
       trim: true,
       lowercase: true,
+      index: true,
     },
     gameName: {
       type: String,
@@ -16,6 +17,12 @@ const PackageSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      trim: true,
+    },
+    category: {
+      type: String,
+      required: true,
+      default: "General",
       trim: true,
     },
     price: {
@@ -31,6 +38,11 @@ const PackageSchema = new mongoose.Schema(
     active: {
       type: Boolean,
       default: true,
+    },
+    sortOrder: {
+      type: Number,
+      default: 0,
+      index: true,
     },
   },
   { timestamps: true }

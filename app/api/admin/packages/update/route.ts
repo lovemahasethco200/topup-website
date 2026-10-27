@@ -12,7 +12,7 @@ export async function PATCH(req: NextRequest) {
     await dbConnect();
 
     const body = await req.json();
-    const { packageId, gameSlug, name, price, bonus } = body;
+    const { packageId, gameSlug, name, price, bonus, category } = body;
 
     if (!packageId) {
       return NextResponse.json(
@@ -42,6 +42,7 @@ export async function PATCH(req: NextRequest) {
         gameSlug: game.slug,
         gameName: game.name,
         name: String(name).trim(),
+        category: category ? String(category).trim() : "General",
         price: String(price).trim(),
         bonus: bonus ? String(bonus).trim() : "",
       },

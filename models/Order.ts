@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 
 const OrderSchema = new mongoose.Schema(
@@ -17,7 +18,26 @@ const OrderSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
+    items: [
+  {
+    packageId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Package",
+    },
+    packageName: {
+      type: String,
+      trim: true,
+    },
+    quantity: {
+      type: Number,
+      min: 1,
+    },
+    unitPrice: {
+      type: Number,
+      min: 0,
+    },
+  },
+],
     uid: {
       type: String,
       required: true,
@@ -28,10 +48,25 @@ const OrderSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    phone: {
+   phone: {
       type: String,
-      required: true,
+       required: false,
+      default: "",
+       trim: true,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
+
+    // Idempotency key used to prevent duplicate wallet purchases.
+    // Existing orders can safely omit this field.
+    checkoutRequestId: {
+      type: String,
       trim: true,
+      maxlength: 100,
     },
 
     paymentMethod: {
@@ -40,8 +75,6 @@ const OrderSchema = new mongoose.Schema(
       trim: true,
       default: "eSewa",
     },
-
-    // NEW
     transactionId: {
       type: String,
       default: "",
@@ -57,7 +90,6 @@ const OrderSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
-
     status: {
       type: String,
       default: "Pending",
@@ -67,4 +99,17 @@ const OrderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.Order || mongoose.model("Order", OrderSchema);
+// A logged-in customer can use a request ID only once.
+// Older orders without checkoutRequestId are excluded.
+OrderSchema.index(
+  { userId: 1, checkoutRequestId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      checkoutRequestId: { $type: "string" },
+    },
+  }
+);
+
+export default mongoose.models.Order ||
+  mongoose.model("Order", OrderSchema);

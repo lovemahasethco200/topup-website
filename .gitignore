@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local backup files and folders
+/backups/
+/admin-auth-backup-*/
+/*.bak
+*.bak
+*.backup
+*.before-*
